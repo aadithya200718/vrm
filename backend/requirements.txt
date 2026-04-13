@@ -1,0 +1,57 @@
+# Core Framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic>=2.10,<3
+pydantic-settings>=2.7,<3
+
+# LLM & Agent Framework
+langchain>=0.3.14
+langchain-community>=0.3.14
+langchain-core>=0.3.33
+langchain-groq>=0.2.4
+langgraph>=0.2.60
+
+# Ollama
+ollama>=0.4
+
+# Vector Store
+qdrant-client>=1.12
+sentence-transformers>=3.3
+
+# Database
+supabase>=2.11
+psycopg2-binary>=2.9
+
+# Cache
+redis>=5.2
+
+# Document Processing
+pdfplumber>=0.11
+python-docx>=1.1
+openpyxl>=3.1
+pandas>=2.2
+
+# OCR
+easyocr>=1.7
+
+# HTTP & Security
+httpx>=0.28
+aiohttp>=3.11
+# SSL checks done via stdlib ssl module
+
+# Monitoring
+prometheus-client>=0.21
+prometheus-fastapi-instrumentator>=7.0
+
+# Logging
+structlog>=24.4
+
+# Testing
+pytest>=8.3
+pytest-asyncio>=0.25
+pytest-cov>=6.0
+
+# Utilities
+python-dotenv>=1.0
+tenacity>=9.0
