@@ -1,1 +1,1 @@
-# app/agents/__init__.py
+"""OPUS Agents — multi-agent vendor risk assessment system."""

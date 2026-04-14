@@ -34,7 +34,17 @@ class Settings(BaseSettings):
     # Monitoring
     prometheus_enabled: bool = Field(default=True)
 
+    # Mailtrap (Evidence Coordinator)
+    mailtrap_api_key: str = Field(default="")
+    mailtrap_sender_email: str = Field(default="opus@vrm-system.com")
+    mailtrap_sender_name: str = Field(default="OPUS Vendor Risk System")
+
+    # Credit Rating API
+    credit_api_mode: str = Field(default="mock")  # "mock" or "opencorporates"
+    opencorporates_api_key: str = Field(default="")
+
     model_config = {
+
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,

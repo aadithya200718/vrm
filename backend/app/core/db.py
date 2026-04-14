@@ -283,3 +283,121 @@ def check_db_health() -> bool:
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         return False
+
+
+# ══════════════════════════════════════════════════════════════════
+# PHASE 2: Compliance Review Operations
+# ══════════════════════════════════════════════════════════════════
+
+def create_compliance_review(data: dict) -> dict:
+    """Insert a new compliance review record."""
+    sb = get_supabase()
+    result = sb.table("compliance_reviews").insert(data).execute()
+    return result.data[0] if result.data else {}
+
+
+def get_compliance_review(vendor_id: str) -> Optional[dict]:
+    """Get the latest compliance review for a vendor."""
+    sb = get_supabase()
+    result = (
+        sb.table("compliance_reviews")
+        .select("*")
+        .eq("vendor_id", vendor_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    return result.data[0] if result.data else None
+
+
+def update_compliance_review(review_id: str, data: dict) -> dict:
+    """Update a compliance review record."""
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    sb = get_supabase()
+    result = sb.table("compliance_reviews").update(data).eq("id", review_id).execute()
+    return result.data[0] if result.data else {}
+
+
+# ══════════════════════════════════════════════════════════════════
+# PHASE 2: Financial Review Operations
+# ══════════════════════════════════════════════════════════════════
+
+def create_financial_review(data: dict) -> dict:
+    """Insert a new financial review record."""
+    sb = get_supabase()
+    result = sb.table("financial_reviews").insert(data).execute()
+    return result.data[0] if result.data else {}
+
+
+def get_financial_review(vendor_id: str) -> Optional[dict]:
+    """Get the latest financial review for a vendor."""
+    sb = get_supabase()
+    result = (
+        sb.table("financial_reviews")
+        .select("*")
+        .eq("vendor_id", vendor_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    return result.data[0] if result.data else None
+
+
+def update_financial_review(review_id: str, data: dict) -> dict:
+    """Update a financial review record."""
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    sb = get_supabase()
+    result = sb.table("financial_reviews").update(data).eq("id", review_id).execute()
+    return result.data[0] if result.data else {}
+
+
+# ══════════════════════════════════════════════════════════════════
+# PHASE 2: Evidence Operations
+# ══════════════════════════════════════════════════════════════════
+
+def create_evidence_request(data: dict) -> dict:
+    """Insert a new evidence request record."""
+    sb = get_supabase()
+    result = sb.table("evidence_requests").insert(data).execute()
+    return result.data[0] if result.data else {}
+
+
+def get_evidence_requests(vendor_id: str) -> list[dict]:
+    """Get all evidence requests for a vendor."""
+    sb = get_supabase()
+    result = (
+        sb.table("evidence_requests")
+        .select("*")
+        .eq("vendor_id", vendor_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+    return result.data or []
+
+
+def update_evidence_request(request_id: str, data: dict) -> dict:
+    """Update an evidence request record."""
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    sb = get_supabase()
+    result = sb.table("evidence_requests").update(data).eq("id", request_id).execute()
+    return result.data[0] if result.data else {}
+
+
+def create_evidence_tracking_entry(data: dict) -> dict:
+    """Insert an evidence tracking log entry."""
+    sb = get_supabase()
+    result = sb.table("evidence_tracking").insert(data).execute()
+    return result.data[0] if result.data else {}
+
+
+def get_evidence_tracking(vendor_id: str) -> list[dict]:
+    """Get all evidence tracking entries for a vendor."""
+    sb = get_supabase()
+    result = (
+        sb.table("evidence_tracking")
+        .select("*")
+        .eq("vendor_id", vendor_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+    return result.data or []

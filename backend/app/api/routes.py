@@ -18,6 +18,11 @@ from app.core.db import (
     update_vendor,
     get_documents_for_vendor,
     get_security_review,
+    get_compliance_review,
+    get_financial_review,
+    get_evidence_requests,
+    update_evidence_request,
+    get_evidence_tracking,
     get_audit_logs,
     create_policy,
     check_db_health,
@@ -210,6 +215,9 @@ async def get_vendor_report(vendor_id: str):
 
     documents = get_documents_for_vendor(vendor_id)
     security_review = get_security_review(vendor_id)
+    compliance_rev = get_compliance_review(vendor_id)
+    financial_rev = get_financial_review(vendor_id)
+    evidence_reqs = get_evidence_requests(vendor_id)
     audit_trail = get_audit_logs(vendor_id)
 
     return {
@@ -239,30 +247,39 @@ async def get_vendor_report(vendor_id: str):
         },
         "security_review": (
             {
-                "id": security_review.get("id"),
                 "overall_score": float(security_review.get("overall_score", 0)),
                 "grade": security_review.get("grade"),
-                "certificate_score": float(
-                    security_review.get("certificate_score", 0)
-                ),
-                "domain_security_score": float(
-                    security_review.get("domain_security_score", 0)
-                ),
-                "breach_history_score": float(
-                    security_review.get("breach_history_score", 0)
-                ),
-                "questionnaire_score": float(
-                    security_review.get("questionnaire_score", 0)
-                ),
-                "findings": security_review.get("findings", []),
-                "critical_issues": security_review.get("critical_issues", []),
-                "recommendations": security_review.get("recommendations", []),
-                "report": security_review.get("report", {}),
                 "status": security_review.get("status"),
+                "report": security_review.get("report", {}),
             }
             if security_review
             else None
         ),
+        "compliance_review": (
+            {
+                "overall_score": float(compliance_rev.get("overall_score", 0)),
+                "grade": compliance_rev.get("grade"),
+                "status": compliance_rev.get("status"),
+                "report": compliance_rev.get("report", {}),
+            }
+            if compliance_rev
+            else None
+        ),
+        "financial_review": (
+            {
+                "overall_score": float(financial_rev.get("overall_score", 0)),
+                "grade": financial_rev.get("grade"),
+                "status": financial_rev.get("status"),
+                "report": financial_rev.get("report", {}),
+            }
+            if financial_rev
+            else None
+        ),
+        "evidence_gaps": {
+            "total": len(evidence_reqs),
+            "pending": sum(1 for r in evidence_reqs if r.get("status") == "pending"),
+            "received": sum(1 for r in evidence_reqs if r.get("status") == "received"),
+        },
         "audit_trail": [
             {
                 "agent": log.get("agent_name"),
@@ -391,21 +408,234 @@ async def get_security_findings(vendor_id: str):
 
 
 # ═══════════════════════════════════════════════════════════════════
+# Compliance Review Endpoints (Phase 2)
+# ═══════════════════════════════════════════════════════════════════
+
+@router.get("/vendors/{vendor_id}/compliance")
+async def get_compliance_findings(vendor_id: str):
+    """Get the compliance review findings for a vendor."""
+    vendor = get_vendor(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    review = get_compliance_review(vendor_id)
+    if not review:
+        return {
+            "vendor_id": vendor_id,
+            "status": "not_started",
+            "message": "No compliance review has been completed for this vendor.",
+        }
+
+    return {
+        "vendor_id": vendor_id,
+        "vendor_name": vendor.get("name"),
+        "compliance_review": {
+            "overall_score": float(review.get("overall_score", 0)),
+            "grade": review.get("grade"),
+            "component_scores": {
+                "gdpr": float(review.get("gdpr_score", 0)),
+                "hipaa": float(review.get("hipaa_score", 0)),
+                "pci": float(review.get("pci_score", 0)),
+                "dpa": float(review.get("dpa_score", 0)),
+                "privacy_policy": float(review.get("privacy_policy_score", 0)),
+            },
+            "applicable_regulations": review.get("applicable_regulations", []),
+            "findings": review.get("findings", []),
+            "gaps": review.get("gaps", []),
+            "recommendations": review.get("recommendations", []),
+            "report": review.get("report", {}),
+            "status": review.get("status"),
+        },
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Financial Review Endpoints (Phase 2)
+# ═══════════════════════════════════════════════════════════════════
+
+@router.get("/vendors/{vendor_id}/financial")
+async def get_financial_findings(vendor_id: str):
+    """Get the financial review findings for a vendor."""
+    vendor = get_vendor(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    review = get_financial_review(vendor_id)
+    if not review:
+        return {
+            "vendor_id": vendor_id,
+            "status": "not_started",
+            "message": "No financial review has been completed for this vendor.",
+        }
+
+    return {
+        "vendor_id": vendor_id,
+        "vendor_name": vendor.get("name"),
+        "financial_review": {
+            "overall_score": float(review.get("overall_score", 0)),
+            "grade": review.get("grade"),
+            "component_scores": {
+                "insurance": float(review.get("insurance_score", 0)),
+                "credit_rating": float(review.get("credit_rating_score", 0)),
+                "financial_stability": float(review.get("financial_stability_score", 0)),
+                "bcp": float(review.get("bcp_score", 0)),
+            },
+            "insurance_details": review.get("insurance_details", {}),
+            "credit_details": review.get("credit_details", {}),
+            "findings": review.get("findings", []),
+            "recommendations": review.get("recommendations", []),
+            "report": review.get("report", {}),
+            "status": review.get("status"),
+        },
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Evidence Coordination Endpoints (Phase 2)
+# ═══════════════════════════════════════════════════════════════════
+
+@router.get("/vendors/{vendor_id}/evidence-gaps")
+async def get_evidence_gaps(vendor_id: str):
+    """List missing documents and evidence gaps for a vendor."""
+    vendor = get_vendor(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    requests = get_evidence_requests(vendor_id)
+    pending = [r for r in requests if r.get("status") == "pending"]
+    received = [r for r in requests if r.get("status") == "received"]
+
+    return {
+        "vendor_id": vendor_id,
+        "vendor_name": vendor.get("name"),
+        "total_requests": len(requests),
+        "pending": len(pending),
+        "received": len(received),
+        "completion_percentage": round((len(received) / max(len(requests), 1)) * 100, 1),
+        "evidence_requests": [
+            {
+                "id": r.get("id"),
+                "document_type": r.get("document_type"),
+                "criticality": r.get("criticality"),
+                "reason": r.get("reason"),
+                "status": r.get("status"),
+                "email_sent": r.get("email_sent"),
+                "deadline": r.get("deadline"),
+                "created_at": r.get("created_at"),
+            }
+            for r in requests
+        ],
+    }
+
+
+@router.post("/vendors/{vendor_id}/request-evidence")
+async def trigger_evidence_request(
+    vendor_id: str,
+    background_tasks: BackgroundTasks,
+):
+    """Manually trigger evidence request coordination for a vendor."""
+    vendor = get_vendor(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    from app.agents.evidence_coordinator import run_evidence_coordinator
+    background_tasks.add_task(run_evidence_coordinator, vendor_id)
+
+    return {
+        "status": "accepted",
+        "vendor_id": vendor_id,
+        "message": "Evidence coordination triggered.",
+    }
+
+
+@router.get("/vendors/{vendor_id}/evidence-status")
+async def get_evidence_status(vendor_id: str):
+    """Track evidence collection progress for a vendor."""
+    vendor = get_vendor(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    requests = get_evidence_requests(vendor_id)
+    tracking = get_evidence_tracking(vendor_id)
+
+    return {
+        "vendor_id": vendor_id,
+        "vendor_name": vendor.get("name"),
+        "evidence_requests": len(requests),
+        "tracking_entries": len(tracking),
+        "requests": [
+            {
+                "id": r.get("id"),
+                "document_type": r.get("document_type"),
+                "status": r.get("status"),
+                "email_sent": r.get("email_sent"),
+                "deadline": r.get("deadline"),
+            }
+            for r in requests
+        ],
+        "recent_tracking": [
+            {
+                "action": t.get("action"),
+                "actor": t.get("actor"),
+                "details": t.get("details"),
+                "created_at": t.get("created_at"),
+            }
+            for t in tracking[-10:]
+        ],
+    }
+
+
+@router.post("/vendors/{vendor_id}/evidence/{doc_type}/received")
+async def mark_evidence_received(vendor_id: str, doc_type: str):
+    """Mark a document type as received for a vendor."""
+    vendor = get_vendor(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    requests = get_evidence_requests(vendor_id)
+    matched = [r for r in requests if r.get("document_type") == doc_type and r.get("status") == "pending"]
+
+    if not matched:
+        raise HTTPException(status_code=404, detail=f"No pending evidence request found for '{doc_type}'")
+
+    from datetime import timezone as tz
+    for req in matched:
+        update_evidence_request(req["id"], {
+            "status": "received",
+            "response_received_at": datetime.now(tz.utc).isoformat(),
+        })
+
+    return {
+        "status": "success",
+        "vendor_id": vendor_id,
+        "document_type": doc_type,
+        "requests_updated": len(matched),
+        "message": f"Document type '{doc_type}' marked as received.",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════
 # Admin Endpoints
 # ═══════════════════════════════════════════════════════════════════
 
-@router.post("/policies/security")
-async def upload_security_policy(request: PolicyUploadRequest):
+@router.post("/policies/{policy_type}")
+async def upload_policy(policy_type: str, request: PolicyUploadRequest):
     """
-    Upload a security policy document.
+    Upload a policy document (security, compliance, or financial).
     Generates embeddings and stores in the Qdrant vector database for RAG search.
     """
+    valid_types = ["security", "compliance", "financial"]
+    if policy_type not in valid_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid policy type. Must be one of: {valid_types}",
+        )
+
     try:
-        # Store in database
         policy_data = {
             "title": request.title,
             "content": request.content,
-            "category": request.category,
+            "category": policy_type,
             "source": request.source,
             "version": request.version,
             "is_active": True,
@@ -413,8 +643,7 @@ async def upload_security_policy(request: PolicyUploadRequest):
         policy = create_policy(policy_data)
         policy_id = policy.get("id", str(uuid.uuid4()))
 
-        # Generate embeddings and store in Qdrant
-        collection = f"{request.category}_policies"
+        collection = f"{policy_type}_policies"
         upsert_policy(
             collection=collection,
             policy_id=policy_id,
@@ -423,20 +652,49 @@ async def upload_security_policy(request: PolicyUploadRequest):
             metadata={
                 "source": request.source,
                 "version": request.version,
-                "category": request.category,
+                "category": policy_type,
             },
         )
 
         return {
             "status": "success",
             "policy_id": policy_id,
-            "message": f"Policy '{request.title}' uploaded and indexed.",
+            "policy_type": policy_type,
+            "message": f"Policy '{request.title}' uploaded and indexed in {collection}.",
             "collection": collection,
         }
 
     except Exception as e:
         logger.error(f"Policy upload failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/policies")
+async def list_policies(policy_type: str = ""):
+    """List all policies, optionally filtered by type."""
+    from app.core.db import get_active_policies
+    if policy_type:
+        policies = get_active_policies(category=policy_type)
+    else:
+        policies = []
+        for cat in ["security", "compliance", "financial"]:
+            policies.extend(get_active_policies(category=cat))
+
+    return {
+        "total": len(policies),
+        "policies": [
+            {
+                "id": p.get("id"),
+                "title": p.get("title"),
+                "category": p.get("category"),
+                "source": p.get("source"),
+                "version": p.get("version"),
+                "is_active": p.get("is_active"),
+                "created_at": p.get("created_at"),
+            }
+            for p in policies
+        ],
+    }
 
 
 @router.get("/health")
