@@ -1,0 +1,16 @@
+{
+  "title": "Federated Learning Round History",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Continual Model Accuracy",
+      "targets": [
+        {
+          "expr": "vendor_onboarding_continual_model_accuracy"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

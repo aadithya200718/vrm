@@ -1,0 +1,17 @@
+{
+  "title": "Worker Throughput Comparison",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Worker Throughput",
+      "targets": [
+        {
+          "expr": "sum(rate(vendor_onboarding_worker_throughput_total[5m])) by (worker_name)"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
+

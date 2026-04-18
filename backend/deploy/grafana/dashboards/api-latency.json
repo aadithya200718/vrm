@@ -1,0 +1,26 @@
+{
+  "title": "API Request Rate + Latency",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "API Requests",
+      "targets": [
+        {
+          "expr": "sum(rate(vendor_onboarding_api_requests_total[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "API Latency p95",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(vendor_onboarding_api_latency_seconds_bucket[5m])) by (le))"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
+

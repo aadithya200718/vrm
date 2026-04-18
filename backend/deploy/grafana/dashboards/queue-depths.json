@@ -1,0 +1,17 @@
+{
+  "title": "Queue Depths Over Time",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Queue Depth",
+      "targets": [
+        {
+          "expr": "vendor_onboarding_queue_depth"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
+

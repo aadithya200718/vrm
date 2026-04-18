@@ -1,0 +1,17 @@
+{
+  "title": "HIPAA Agent Success / Failure",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HIPAA Checks",
+      "targets": [
+        {
+          "expr": "sum(rate(vendor_onboarding_hipaa_checks_total[5m])) by (check_name, result)"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
+

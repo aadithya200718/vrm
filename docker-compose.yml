@@ -1,0 +1,147 @@
+networks:
+  vendor-onboarding-network:
+    name: vendor-onboarding-network
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    environment:
+      DATA_BACKEND: supabase
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - vendor-onboarding-network
+
+  celery-worker-1:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: celery -A backend.tasks.celery_app.celery_app worker --loglevel=INFO --queues=verification_queue,hipaa_check_queue --hostname=verification@%h
+    env_file:
+      - .env.example
+    environment:
+      DATA_BACKEND: supabase
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - vendor-onboarding-network
+
+  celery-worker-2:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: celery -A backend.tasks.celery_app.celery_app worker --loglevel=INFO --queues=verification_queue,notification_queue,rl_training_queue,scheduler_queue --hostname=operations@%h
+    env_file:
+      - .env.example
+    environment:
+      DATA_BACKEND: supabase
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - vendor-onboarding-network
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: celery -A backend.tasks.celery_app.celery_app beat --loglevel=INFO
+    env_file:
+      - .env.example
+    environment:
+      DATA_BACKEND: supabase
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - vendor-onboarding-network
+
+  fl-server:
+    build:
+      context: .
+      dockerfile: backend/fl_server/Dockerfile
+    ports:
+      - "8010:8010"
+    networks:
+      - vendor-onboarding-network
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vendor-onboarding-network
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./backend/deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - vendor-onboarding-network
+
+  loki:
+    image: grafana/loki:3.2.0
+    command: -config.file=/etc/loki/local-config.yml
+    volumes:
+      - ./backend/deploy/loki/local-config.yml:/etc/loki/local-config.yml:ro
+    ports:
+      - "3100:3100"
+    networks:
+      - vendor-onboarding-network
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./backend/deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./backend/deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - vendor-onboarding-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.59
+    ports:
+      - "16686:16686"
+    networks:
+      - vendor-onboarding-network
