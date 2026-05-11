@@ -76,7 +76,6 @@ docker compose up --build
 - Compliance Officer: `dev-role:compliance_officer:compliance@hackstrom.local`
 
 ## Key Paths
-
 - Backend entry: `backend/main.py`
 - FastAPI app: `backend/api/app.py`
 - Workflow service: `backend/core/services.py`
