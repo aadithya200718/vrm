@@ -107,7 +107,7 @@ llm = primary_llm.with_fallbacks([fallback_llm])
 - Use for: Complex semantic search, similarity matching
 
 **Installation:**
-```python
+``python
 from sentence_transformers import SentenceTransformer
 
 # Load models locally
