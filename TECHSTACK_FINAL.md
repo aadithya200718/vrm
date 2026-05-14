@@ -189,7 +189,7 @@ supabase = create_client(
 - Store active agent state
 - Pub/sub for real-time frontend updates
 
----
+--
 
 ## Vector Database
 
