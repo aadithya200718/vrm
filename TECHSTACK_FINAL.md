@@ -4,7 +4,8 @@
 
 This is the finalized technology stack for building the multi-agent vendor risk assessment system with all free and open-source components.
 
---
+---
+
 
 ## Core Backend Stack
 
