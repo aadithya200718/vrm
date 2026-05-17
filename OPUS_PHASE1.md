@@ -3,7 +3,7 @@
 ## Objective
 Build the foundational infrastructure, implement the Supervisor Agent, Document Intake Agent, and one complete review agent (Security) with full autonomous capabilities. Establish the multi-agent orchestration pattern and prove the autonomous decision-making works end-to-end.
 
----
+--
 
 ## What to Build in Phase 1
 
