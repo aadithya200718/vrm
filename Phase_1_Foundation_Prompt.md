@@ -343,8 +343,7 @@ VITE_APPROVER_BEARER_TOKEN=
 - [ ] Test parallel workers (submit 5 vendors, both workers active)
 - [ ] Verify OpenTelemetry traces appear in Jaeger
 - [ ] Verify logs appear in Loki from both workers
-- [ ] Verify Prometheus metrics update on each request
-- [ ] Test Grafana alert for `hipaa_check_queue` depth > 50
+
 
 
 
