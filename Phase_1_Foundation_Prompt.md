@@ -346,20 +346,7 @@ VITE_APPROVER_BEARER_TOKEN=
 - [ ] Verify Prometheus metrics update on each request
 - [ ] Test Grafana alert for `hipaa_check_queue` depth > 50
 
-## Success Criteria
-- Docker compose brings up all 8 services on single network
-- Both Celery workers running and processing tasks from different queues
-- Frontend connects to backend API successfully
-- Employee can submit vendor request with ePHI gate
-- Vendor receives portal link and can upload documents
-- Documents are classified and embedded automatically
-- Real-time status updates via SSE
-- Approval workflow routes correctly (3-step SaaS, 4-step Healthcare)
-- PII/ePHI never appears in API responses
-- All logs searchable in Grafana via Loki
-- Prometheus metrics visible in Grafana dashboards
-- Healthcare vendors trigger HIPAA-specific checks
-- ePHI access log is append-only (UPDATE/DELETE blocked)
+
 
 ## Next Phase Preview
 Phase 2 will implement the intake and document collection agents, including the ePHI gate logic, vendor invitation system, multi-step document upload portals (8 docs for SaaS, 11 for Healthcare), document classification with GPT-4o, and self-supervised embedding generation for RAG.
