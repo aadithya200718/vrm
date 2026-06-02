@@ -964,14 +964,3 @@ volumes:
 
 ---
 
-## Conclusion
-
-This stack is 100% free for development and can scale to production with minimal costs. All components are open-source, well-maintained, and production-ready. You can start with $0/month and scale up as needed.
-
-**Total Cost to Get Started: $0**
-
-**Estimated Cost for Small Production: $50-100/month**
-
-**Estimated Cost for Large Production: $200-500/month**
-
-All costs are optional and can be reduced by self-hosting more components.
