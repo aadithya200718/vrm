@@ -954,13 +954,4 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
-volumes:
-  postgres_data:
-  redis_data:
-  qdrant_data:
-  prometheus_data:
-  grafana_data:
-```
-
----
 
