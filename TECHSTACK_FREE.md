@@ -4,8 +4,6 @@
 
 This document outlines a 100% free and open-source technology stack for building the multi-agent vendor risk assessment system. All components are either free to use, open-source, or have generous free tiers.
 
----
-
 ## Core Backend Stack
 
 ### Application Framework
