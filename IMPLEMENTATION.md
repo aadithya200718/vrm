@@ -1,6 +1,5 @@
 # Vendor Risk Control Tower - Implementation Guide
-
-## System Overview
+System Overview
 
 A multi-agent system for autonomous vendor risk assessment, compliance review, and approval orchestration. The system uses specialized agents that reason independently and collaborate to produce comprehensive vendor approval packets.
 
