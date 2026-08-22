@@ -1,6 +1,5 @@
 # OPUS Phase 3: Risk Assessment, Approval Orchestration & Production Readiness
-
-## Objective
+Objective
 Complete the system with Risk Assessment Agent and Approval Orchestrator Agent. Implement the final decision-making workflow, approval routing, audit trail generation, and production-ready features including frontend, monitoring, and deployment infrastructure.
 
 ---
